@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "agent开发/Agent学习执行总表与视频导航.md",
+                "file": "知识库管理/Obsidian同步到GitHub.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Agent学习执行总表与视频导航"
+              "title": "Obsidian同步到GitHub"
             }
           }
         ]
@@ -55,7 +55,7 @@
             "state": {
               "type": "search",
               "state": {
-                "query": "",
+                "query": "push",
                 "matchingCase": false,
                 "explainSearch": false,
                 "collapseAll": false,
@@ -79,7 +79,8 @@
               "title": "书签"
             }
           }
-        ]
+        ],
+        "currentTab": 1
       }
     ],
     "direction": "horizontal",
@@ -190,24 +191,35 @@
   },
   "active": "b7fc4f82f24b0d73",
   "lastOpenFiles": [
+    "agent开发/端侧智能体岗位核心技术要求.md",
+    "agent开发/端侧智能体岗位匹配与路线调整.md",
+    "agent开发/笔记.md",
+    "Pasted image 20261025124202.png",
+    "Pasted image 20261025123913.png",
+    "Pasted image 20261025122025.png",
+    "知识库管理/Obsidian同步到GitHub.md",
+    "机器人开发/内网ROS2开发环境部署.md",
+    "机器人开发/ROS2/1 教程资料/3 ROS2课程",
+    "机器人开发/ROS2/1 教程资料/新建文件夹",
+    "机器人开发/ROS2/1 教程资料",
+    "机器人开发/ROS2/新建文件夹",
+    "机器人开发/ROS2",
+    "机器人开发/新建文件夹",
+    "agent开发/AI智能体技术全景与分阶段学习主计划.md",
+    "agent开发/Agent与Android端侧AI教程清单.md",
+    "agent开发/Agent学习执行总表与视频导航.md",
     "新建文本文档.txt",
     "知识库管理/索引.md",
-    "知识库管理/Obsidian同步到GitHub.md",
     "知识库管理",
     "agent开发/多智能体课程目录取舍分析.md",
-    "agent开发/Agent学习执行总表与视频导航.md",
     "机器人开发/机器人开发技术栈与入门路线.md",
     "欢迎.md",
     "agent开发/B站Agent课程精选与观看顺序.md",
-    "agent开发/AI智能体技术全景与分阶段学习主计划.md",
     "agent开发/李宏毅2025机器学习核心知识详解.md",
     "agent开发/零基础转型端侧Agent视频跟学指南.md",
     "agent开发/李宏毅2025机器学习课程视频导读.md",
     "agent开发/端侧Agent入门实战计划.md",
-    "agent开发/端侧智能体岗位核心技术要求.md",
     "agent开发/市面Agent培训课程调研与选课建议.md",
-    "agent开发/Agent与Android端侧AI教程清单.md",
-    "agent开发/端侧智能体岗位匹配与路线调整.md",
     "agent开发/Android系统工程师转型Agent开发路线.md",
     "AGENTS.md"
   ]

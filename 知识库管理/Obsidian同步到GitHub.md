@@ -82,6 +82,39 @@ git push
 
 ## 常见问题
 
+### 2026-10-24：浏览器启动失败与 Schannel 握手失败
+
+用户使用一次性 HTTP 代理 `127.0.0.1:7890` 推送后，先出现浏览器认证提示，随后报“找不到应用程序”和 `schannel: failed to receive handshake`。这可能涉及浏览器启动及 TLS/代理两条问题链，不能确认代理端口正确或认证已经完成。
+
+建议先用一次性设置重试，不修改全局配置：
+
+```powershell
+git -c http.proxy=http://127.0.0.1:7890 -c http.sslBackend=openssl -c credential.gitHubAuthModes=device push -u origin main
+```
+
+其中切换 OpenSSL 是对 Windows TLS 后端的诊断尝试，不保证解决代理链路故障；只有 Git 构建支持该后端才有效。Git Credential Manager 的 `device` 模式允许手动打开验证网址并输入设备码，避免依赖自动启动浏览器；依赖已安装且启用 GCM。设备码只输入 GitHub 验证页，不发送给他人。若认证组件本身无法联网，该模式仍可能失败。
+
+仍报握手失败时，在同一终端运行 `curl.exe -I --proxy http://127.0.0.1:7890 https://github.com`，并核对代理软件的实际 HTTP/mixed 端口和节点。若 curl 也失败，更应先排查代理路径；若 curl 成功，仍不能证明 Git/GCM 使用相同 TLS 后端及代理设置，需进一步检查。不要关闭 SSL 校验。
+
+参考：[Git HTTP 配置](https://git-scm.com/docs/git-config)、[GCM 认证模式配置](https://github.com/git-ecosystem/git-credential-manager/blob/main/docs/configuration.md)。本次仅提供步骤，修复和推送结果待用户验证。
+
+### 2026-10-24：连接 GitHub 443 超时
+
+用户推送目标为 `https://github.com/xiaolu1118/obsidian-notes.git/`，收到 `Failed to connect to github.com:443 ... Could not connect to server`。这说明连接阶段失败，不能据此判断仓库权限或凭证有误。用户已能运行 Git，但初始化、提交和推送成功状态尚未核验。
+
+诊断建议：先在浏览器访问 GitHub，再在用户 PowerShell 执行 `Test-NetConnection github.com -Port 443`。Codex 受限环境内测试也失败，但该结果可能受沙箱影响，不直接用来断言用户系统的网络状态。
+
+若用户正在使用本机代理，确认软件开启、HTTP 或 mixed 监听地址和端口；浏览器能访问并不证明命令行已使用代理。可先使用一次性配置验证，下面 `7890` 仅为示例，必须改为代理软件显示的实际 HTTP/mixed 端口：
+
+```powershell
+git -c http.proxy=http://127.0.0.1:7890 ls-remote https://github.com/xiaolu1118/obsidian-notes.git
+git -c http.proxy=http://127.0.0.1:7890 push -u origin main
+```
+
+空仓库的 `ls-remote` 可以不输出任何引用；还需检查命令退出状态，且私有仓库可能先要求认证。只有验证后才考虑用 `git config --local http.proxy http://127.0.0.1:7890` 保存本库代理。代理关闭或端口改变后须相应调整。若代理是 SOCKS 而非 HTTP，不能直接套用 HTTP 示例。
+
+没有代理时，先换可访问 GitHub 的网络再测试；不建议关闭 SSL 校验，因为 TCP 连接失败发生在证书校验之前。当前未擅自修改代理、远程 URL 或执行推送。待确认：用户是否使用代理及其协议和端口；不要提供代理密码或 Token。
+
 - `Author identity unknown`：配置本库的 `user.name` 和 `user.email`。
 - `remote origin already exists`：先检查已有远程配置；确认目标后再调整，不重复添加。
 - push 被拒绝：远程可能已有提交或其他设备已上传；先检查历史并拉取、合并，不强推覆盖。
