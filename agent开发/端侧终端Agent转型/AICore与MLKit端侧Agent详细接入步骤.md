@@ -312,6 +312,20 @@ adb shell dumpsys package com.google.android.aicore > .\aicore-package.txt
 
 ## 12. 官方资料与完成状态
 
+### 2026-11-15 用户反馈与手机能力关联
+
+用户反馈“这个跑通了”，并询问与手机的关联。记录为用户自述已跑通前述实验；具体是模型生成、AgentRunner 对话还是工具闭环未明确，设备/ROM 是否调整也未知。不能据此推翻此前已解锁设备的官方支持限制，也不继续把所有真机阶段统一记为未完成。
+
+本轮解释：如果只完成输入/输出，目前验证的是手机本地模型调用，尚未建立丰富的手机操作能力。应区分运行位置（手机推理）、上下文来源（授权数据与设备状态）、执行接口（公开 API/Intent、应用工具）、系统集成（权限/IPC/生命周期/资源）四层。
+
+建议下一项目从“文本聊天”变为“手机状态助手”：getDeviceInfo 查询允许读取的设备/版本信息，getMemoryStatus 通过 ActivityManager.getMemoryInfo 获取系统可用内存等粗粒度状态，openDisplaySettings 通过 Settings.ACTION_DISPLAY_SETTINGS 打开显示设置页。工具包装需独立验证，界面行为在前台用户动作下执行。打开设置不等于自动修改设置；普通 App 也不能任意读取其他 App 数据或执行系统特权操作。
+
+示例请求：“我手机有点卡，先看看内存，再帮我打开显示设置。”期望模型选择工具、宿主执行、结果回传、报告可用内存与操作结果。仅凭内存值不能判断卡顿根因；应说明还需要 CPU/帧耗时/温度/进程等授权证据。评价重点是任务是否完成、工具是否正确、授权边界与失败恢复，而非回答是否流畅。
+
+对 Framework 背景的延伸：模型决定目标/工具选择，确定性程序约束授权与执行；进一步研究 Binder/AIDL、请求调度、进程死亡、任务恢复、内存/延迟/温升。可在定制系统中另行扩展受控诊断服务，但拥有本地模型本身不增加权限，不要求把模型放入 system_server。
+
+下一项建议：先完成上述三个工具与一条真实手机交互任务；非用户已确认实施。当前尚未核实实际代码、执行轨迹或设备日志。
+
 - [设备支持与限制](https://developers.google.com/ml-kit/genai)
 - [预览报名与模型测试](https://developers.google.com/ml-kit/genai/aicore-dev-preview)
 - [Direct model access](https://developers.google.com/ml-kit/genai/prompt/android/get-started)
@@ -320,6 +334,6 @@ adb shell dumpsys package com.google.android.aicore > .\aicore-package.txt
 - [会话与生命周期](https://developers.google.com/ml-kit/genai/agent/android/manage-sessions)
 - [事件与 UI](https://developers.google.com/ml-kit/genai/agent/android/streaming-events)
 
-已完成：公开文档复核、AICore 独立教程和索引归档。未完成：用户设备资格变更、测试报名、模型下载、工程编译、真机生成或 Agent 验收。用户要求教程不代表同意换机、刷回原厂、锁 bootloader 或参加预览，本轮未执行这些操作。
+由助手完成：公开文档复核、AICore 独立教程和索引归档。用户自述实验已跑通，完成范围尚未逐项核实。助手未执行设备资格变更、测试报名、模型下载、工程编译或真机验收；用户未授权的换机/刷机/锁 bootloader 等也未实施。
 
 关联：[[Google端侧大模型方案与实现流程]]、[[Google端侧Agent从零到交付完整实操流程]]、[[agent开发/端侧终端Agent转型/索引|专题索引]]。
