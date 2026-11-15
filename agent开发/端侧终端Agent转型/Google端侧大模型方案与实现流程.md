@@ -1,17 +1,49 @@
 ---
 created: 2026-11-01
-updated: 2026-11-01
+updated: 2026-11-15
 tags: [Google, AICore, GeminiNano, MLKit, LiteRT-LM, Android]
 status: 技术分析与实践建议
 ---
 
 # Google 端侧大模型方案与实现流程
 
+> 2026-11-15 新增：[[AICore与MLKit端侧Agent详细接入步骤]]，用于单独学习 AICore 系统托管路线。此前针对当前解锁 AOSP 的 LiteRT-LM 建议保留，二者步骤和支持条件不混用。
+
 ## 背景与核验范围
+
+### 2026-11-14：用户确认先采用 Google 方案
+
+已确认：用户选择先学习 Google 方案。建议首选 ML Kit GenAI → AICore → Gemini Nano 系统托管路线，先 Direct model access，再 AgentRunner；这一路线细分是根据上下文提出的实施建议。现有设备、系统与预览资格尚未确认，未安装依赖或运行真机实验。
+
+第一步应核对手机型号、Android 版本、ROM 地区、Google 服务与 bootloader 状态，对照官方 Custom generation and agent device support，不能仅凭 Android 版本或 AICore 已安装认定可用。Agent 入门页当前要求 Android 14/API 34 以上、受支持设备、加入 AICore Developer Preview，项目 minSdk 26 以上及 Kotlin 2.3 以上。minSdk 不等于设备运行条件。
+
+建议首个项目为 NanoPlayground：仅有文本输入、模型状态、下载进度、生成结果、耗时和错误显示。先通过 checkStatus() 区分不可用、可下载、下载中和可用状态，按官方示例处理下载，再执行一次生成。首轮目标是验证本地模型链路，不是完成 Agent。
+
+后续顺序：流式生成与取消 → 两个应用内只读日志工具 listLogs/readLog → 工具调用及回传闭环 → 任务状态和失败记录。沿用前文入门案例以减少场景切换；待办写入、AppFunctions、端云路由和服务拆分后置。
+
+本轮复核官方示例依赖仍为 genai-prompt:1.0.0-beta4、genai-agent:1.0.0-alpha1，实际创建工程时重新核对。无需为本地 AICore 推理配置云模型 API Key；设备预览资格、模型下载等仍需满足官方条件。若现有设备不支持，先评估同属 Google 路线的 LiteRT-LM，不自动要求购机，也不将其视为 AICore 的替代实现。
+
+关联：[[agent开发/端侧Agent入门实战计划|Agent 入门实战计划]]。当前下一项待办：收集设备信息并判定可用入口。
 
 用户要求详细分析 Google 手机端大模型方案与实现流程。依据 2026-11-01 查阅的官方资料；未进行设备部署、代码编译或性能实测。API 版本、设备支持与预览资格随时间变化。
 
 ## 三条路线
+
+### 设备补充与入口调整（2026-11-14）
+
+用户已确认：骁龙 8 Gen 3、12 GB 内存、AOSP 16、bootloader 已解锁；具体机型、GPU 驱动版本、ROM 来源和 Google 服务状态未知。此前“设备完全未知”的描述仅代表更早阶段。
+
+本轮官方 Direct model access 入门文档明确：不支持 bootloader 已解锁设备。因此现有设备不作为 ML Kit/AICore/Nano 的受支持实验环境；AOSP 16 的版本与 12 GB 内存不能消除此限制，也不能通过仅安装 SDK/APK 认定补齐 Google 模型服务。
+
+建议保留 Google 技术方向，实践入口调整为 App → LiteRT-LM → 兼容模型 → CPU/GPU（NPU 按设备与后端支持另行评估）。这是自管模型部署，非 AICore，也不意味着可自行部署 Gemini Nano。建议尚未由用户进一步确认。
+
+SoC 已确认，建议直接开展 Google AI Edge Gallery 真机验证，无需继续把完整型号作为开始的前提；如出现后端问题，再补驱动与机型信息。Gallery 官方 README 要求 Android 12 以上，并提供无 Google Play 时的官方 Release APK。先用内置列表中适配当前版本的小型文本模型；若提供兼容 Gemma 3n E2B 量化包，可作为候选，不能只按名称下载任意格式，E2B 也不等于文件或总内存 2 GB。模型许可/下载可能需 Hugging Face 账号与网络。
+
+GPU 作为首选验证后端；初始化失败时，在所用模型和版本提供支持的前提下尝试 CPU。骁龙平台具备 AI 硬件不意味着任意 AOSP 驱动、模型和运行时组合都能用 NPU，NPU 优化后置。建议首次用短文本、约 128—256 输出 Token（设置可用时），下载并加载后断网验证生成，记录冷加载、首 Token 延迟、生成速度、PSS 与失败日志。12 GB 是整机内存，不能据此保证某模型可运行或达到性能目标。以上尚未实测。
+
+学习顺序：官方 Gallery 示例真机验证 → Kotlin 最小生成 App → 独立进程 Service/AIDL → 两个受控工具形成 Agent 循环。暂不要求换机、刷回原厂或重新锁定 bootloader；未进行安装、刷机或性能实测。
+
+核验来源：[Google：解锁设备限制](https://developers.google.com/ml-kit/genai/prompt/android/get-started)、[LiteRT-LM 与 Gallery 入口](https://developers.google.com/edge/litert-lm/overview)。
 
 | 路线 | 组成 | 开发者负责什么 |
 | --- | --- | --- |
@@ -163,7 +195,7 @@ LiteRT-LM 是公开的、基于 LiteRT 的 LLM 运行与编排框架，可用于
 5. 指标：成功率、错误操作率、冷/热首响应、端到端 P95、内存、持续负载和配额错误。
 6. 对照：再以 LiteRT-LM 实现同一场景，比较托管模型与自管模型的能力、资源和工程成本。
 
-这些是建议，用户尚未确认项目或设备；本轮完成的是资料核验与归档。
+这些是实践建议；用户于 2026-11-14 确认先学习 Google 方案，但尚未确认具体项目或设备。当前完成的是资料核验与归档。
 
 ## 官方参考
 
